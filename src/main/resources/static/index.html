@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/webjars/bootstrap/4.1.0/css/bootstrap.min.css">
+    <script src="webjars/jquery/3.3.1-1/jquery.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="w-25 p-3">
+
+<form id="exchangeForm">
+                <input type="number" class="form-control" placeholder="Kwota w PLN"
+                       id="currencyExchangeValInput" data-error="Bruh, that email address is invalid">
+                <input type="date" class="form-control" id="currencyExchangeDateInput">
+                <select class="form-control" id="valueSelect">
+                </select>
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" id="currencyExchangeButton">Przelicz
+                    </button>
+                </div>
+</form>
+
+    </div>
+</div>
+</body>
+</html>
+
+<script>
+    $(document).ready(function() {
+        $.ajax({
+            type: "GET",
+            url: "/exchange/currencies",
+            success:function (results) {
+                console.log(results);
+                var dropDown = $("#valueSelect");
+                $.each(results.rates, function() {
+                    dropDown.append($("<option />").val(this.code).text(this.currency));
+                });
+            },
+            error: function (result) {
+                console.log(result);
+                alert(result.responseJSON.errorMessage || result.responseJSON.message);
+            }
+        })
+    });
+
+
+    $('#currencyExchangeButton').click(function () {
+        var enteredValue = $('#currencyExchangeValInput').val();
+        var enteredDate = $('#currencyExchangeDateInput').val();
+        var selectValue = $('#valueSelect').val();
+
+        if(Number(enteredValue) && enteredDate == "") {
+            console.log("Data nie może być pusta.");
+            alert("Data nie może być pusta.");
+        }
+        if(Number(enteredValue) && enteredDate != "") {
+            $.ajax({
+                type: "GET",
+                url: "/exchange/" + selectValue + "/" + enteredValue + "/" + enteredDate,
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                success: function (result) {
+                    alert(enteredValue + " PLN  =  " + result.value + " " + selectValue);
+                },
+                error: function (result) {
+                    console.log(result);
+                    alert(result.responseJSON.errorMessage || result.responseJSON.message);
+                }
+            })
+        }
+        if(!Number(enteredValue) && enteredDate == "") {
+            console.log("Wprowadz poprawną kwotę oraz date.");
+            alert("Wprowadz poprawną kwotę oraz date.");
+        }
+        if(!Number(enteredValue) && enteredDate != "") {
+            console.log("Wprowadz poprawną kwotę.");
+            alert("Wprowadz poprawną kwotę.");
+        }
+    });
+
+</script>
